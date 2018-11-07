@@ -1,0 +1,53 @@
+#开放9312端口
+firewall-cmd --zone=public --add-port=9312/tcp --permanent
+firewall-cmd --zone=public --add-port=7004/tcp --permanent
+
+#重启防火墙
+firewall-cmd --reload
+
+#安装postgresql96
+yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+yum install -y postgresql96-server postgresql96-contrib
+/usr/pgsql-9.6/bin/postgresql96-setup initdb
+systemctl start postgresql-9.6
+systemctl enable postgresql-9.6
+
+yum install make gcc gcc++ gcc-c++ libtool autoconf automake imake mysql-devel libxml2-devel expat-devel postgresql-devel
+
+#把文件coreseek-3.2.14.tar.gz放置/opt/data/ 下面
+
+
+
+
+#安装mmseg
+cd /opt/data/coreseek-3.2.14/mmseg-3.2.14
+./bootstrap
+./configure --prefix=/usr/local/mmseg3 
+make && make install
+
+#安装 csft-3.2.14 
+
+cd /usr/local/src/csft-3.2.14
+#需要修改/usr/local/src/sphinxexpr.cpp 文件，用文件夹中的sphinxexpr.cpp替换掉。
+sh buildconf.sh
+./configure --prefix=/usr/local/coreseek  --without-unixodbc --with-mmseg --with-mmseg-includes=/usr/local/mmseg3/include/mmseg/ --with-mmseg-libs=/usr/local/mmseg3/lib/ --with-mysql --with-pgsql --with-pgsql-includes=/usr/include/ -with-pgsql-libs=/usr/pgsql-9.6/lib --with-pg-config=/usr/pgsql-9.5/bin/pg_config
+make && make install
+
+
+#配置文件
+
+把文件件中的sphinx-base.conf，放置在文件夹/usr/local/coreseek/etc/下面
+
+
+
+
+#开机任务
+ 
+vim /etc/rc.d/rc.local
+
+#添加一行
+/usr/local/coreseek/bin/searchd -c /usr/local/coreseek/etc/sphinx-base.conf
+
+
+#给权限
+chmod +x /etc/rc.d/rc.local
